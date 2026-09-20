@@ -205,6 +205,28 @@ har -f capture.har extract --index 3 -o response.json  # Save to file
 
 **Flags**: `--index`, `--decode` (default true), `--all`
 
+#### `endpoints` — Endpoint Fingerprint (本 fork 新增)
+
+Cluster all requests into normalized API endpoints: `method + host + path template`. Dynamic path segments (numeric IDs, UUIDs, hex, base64-shaped) are normalized to `{param}`. Query params don't affect the fingerprint but are recorded per-endpoint.
+
+This is the foundation for all higher-level analysis: schema aggregation, multi-sample diff, dependency analysis all start from endpoint normalization.
+
+```bash
+har -f capture.har endpoints                          # All endpoints
+har -f capture.har endpoints --sort count             # Sort by sample count (default)
+har -f capture.har endpoints --host api.example.com   # Filter by host
+har -f capture.har endpoints --format json            # JSON with full entry indices
+```
+
+**Flags**: `--sort` (count/host/path), `--host`, `--limit`, `--url-max`
+
+Output: endpoint fingerprint, sample count, status codes, query keys, param segment positions, representative URL, and global entry indices (usable with `extract --index` / `diff-entry --index-a`).
+
+**Normalization rules**:
+- Path segments matching numeric / UUID / hex(≥8) / base64(≥12, mixed alpha+digit) → `{param}`
+- Single-sample numeric segments are NOT normalized (e.g. `/order/20240920` with only 1 entry stays literal) — avoids false positives on static date-like path segments
+- Default ports (80/443) are stripped; non-default ports are kept
+
 ---
 
 ### Level 2: File Operations
@@ -377,6 +399,23 @@ har -f capture.har cookie-trace token --url-max 60            # truncate long Ap
 **Flags**: `--show-value` (default true), `--url-max` (0 = no truncation)
 
 Output: first-set location (global index usable with `extract --index`), then a timeline of `set`/`sent` events with `*` marking value changes. If the cookie appears in requests but was never set inside this HAR, that means the set happened before recording started.
+
+#### `value-trace` — Value Provenance Trace (本 fork 新增)
+
+Generalizes `cookie-trace` to any value. Searches the entire HAR for where a value appears: URL, query params, request/response headers, cookies, POST params, request body, response body. Optionally matches URL-encoded, base64, and hex variants.
+
+This answers the core reverse-engineering question: "where does this token / sign / session value come from, and where is it used?"
+
+```bash
+har -f capture.har value-trace "abc123def"                    # Basic trace
+har -f capture.har value-trace "token=xyz" --base64           # Include base64 variant
+har -f capture.har value-trace "sess-999" --no-body           # Skip body (faster on large HARs)
+har -f capture.har value-trace "sig" --format json            # JSON output
+```
+
+**Flags**: `--no-body`, `--url-encode` (default true), `--base64`, `--hex`, `--url-max`, `--context`
+
+Output: locations grouped by direction (request/response) and field type (url/query/header/cookie/post-param/body), with match type (exact/url-encoded/base64/hex) and context snippet. Entry indices are global.
 
 #### `cache` — Cache Analysis
 
@@ -570,6 +609,17 @@ contentTypes := h.ContentTypeDistribution()
 slowest := h.SlowestRequests(10)
 fastest := h.FastestRequests(10)
 largest := h.LargestResponses(10)
+
+// Endpoint fingerprint (本 fork 新增)
+endpoints := h.BuildEndpoints()          // []*Endpoint
+ep := h.FindEndpointByFingerprint("GET api.example.com /user/{param}/orders")
+// Endpoint fields: ID, Method, Host, PathTemplate, Fingerprint, Count,
+//   EntryIndices, QueryKeys, StatusCodes, FirstSeen, LastSeen, StaticURL, SampleURL
+
+// Value trace (本 fork 新增)
+report := h.TraceValue("sess-abc-999", har.DefaultValueTraceOptions())
+// report.Locations: []ValueLocation{EntryIndex, Direction, FieldType, FieldName, MatchType, Context}
+// report.FirstSeen: first occurrence location
 
 // Security
 report := h.SecurityAudit()    // *SecurityReport

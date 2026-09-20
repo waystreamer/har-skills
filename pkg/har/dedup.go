@@ -155,10 +155,42 @@ func computeExactURLKey(entry Entries, opts DeduplicateOptions) string {
 	return key
 }
 
-// computeURLPatternKey 忽略指定参数的URL模式匹配键
+// computeURLPatternKey 基于端点指纹的 URL 模式匹配键
+//
+// 路径中的动态段（数字 ID、UUID、hex、base64）归一为 {param}，
+// query 参数经 normalizeURL 排序/去忽略后追加。
+// 与 endpoint.go 的 BuildEndpoints 共用同一套路径归一化逻辑。
 func computeURLPatternKey(entry Entries, opts DeduplicateOptions) string {
-	normalizedURL := normalizeURL(entry.Request.URL, opts.IgnoreParams)
-	key := entry.Request.Method + " " + normalizedURL
+	u, err := url.Parse(entry.Request.URL)
+	if err != nil {
+		// 解析失败退回到原始 URL 归一化
+		normalizedURL := normalizeURL(entry.Request.URL, opts.IgnoreParams)
+		key := entry.Request.Method + " " + normalizedURL
+		if opts.CompareHeaders {
+			key += " " + headersKey(entry.Request.Headers)
+		}
+		if opts.CompareBody && entry.Request.PostData != nil {
+			key += " " + entry.Request.PostData.Text
+		}
+		return key
+	}
+
+	host := normalizeHost(u)
+	normPath, _ := normalizePath(u.Path)
+
+	// query 部分沿用原有 normalizeURL 逻辑（排序 + 去忽略参数）
+	normalizedQuery := ""
+	if u.RawQuery != "" {
+		normalizedQuery = normalizeURL(entry.Request.URL, opts.IgnoreParams)
+		// 只取 ? 后面的部分
+		if idx := indexOf(normalizedQuery, '?'); idx >= 0 {
+			normalizedQuery = normalizedQuery[idx:]
+		} else {
+			normalizedQuery = ""
+		}
+	}
+
+	key := entry.Request.Method + " " + host + " " + normPath + normalizedQuery
 	if opts.CompareHeaders {
 		key += " " + headersKey(entry.Request.Headers)
 	}
@@ -166,6 +198,16 @@ func computeURLPatternKey(entry Entries, opts DeduplicateOptions) string {
 		key += " " + entry.Request.PostData.Text
 	}
 	return key
+}
+
+// indexOf 返回 s 中第一个 c 的位置，找不到返回 -1
+func indexOf(s string, c byte) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] == c {
+			return i
+		}
+	}
+	return -1
 }
 
 // computeContentHashKey 基于内容哈希的键
