@@ -6,7 +6,7 @@
 
 **HAR Skills** is an AI-oriented Go SDK and CLI tool for HAR (HTTP Archive) files. It provides:
 - **SDK** (root package): 40 Go modules with 70+ methods for HAR parsing, analysis, transformation, and export
-- **CLI** (`cmd/har/`): 23 Cobra-based commands exposing all SDK capabilities via terminal
+- **CLI** (`cmd/har/`): 29 Cobra-based commands exposing all SDK capabilities via terminal
 - **Skill Docs**: Progressive disclosure documentation (this file) for AI agent consumption
 - **Install**: `go install github.com/waystreamer/har-skills/cmd/har@latest`
 
