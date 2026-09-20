@@ -82,6 +82,10 @@ func ParseHar(harFileBytes []byte) (*Har, error) {
 // 第三方抓包工具（Reqable/Charles/Fiddler 等）的导出常带有校验器拒绝
 // 但内容可分析的字段（timings 为 -1、缺失 mimeType、无名 cookie 等），
 // 分析类场景应先加载再容错处理，而不是整体拒绝。
+//
+// 实现说明：使用纯结构体快速路径（见 fastparse.go），避免嵌套
+// UnmarshalJSON 导致的 O(depth × size) 重复解析。对 130MB 的 HAR
+// 可将解析时间从 ~10s 降至 ~1s。
 func ParseHarSkipValidation(harFileBytes []byte) (*Har, error) {
 	if len(harFileBytes) == 0 {
 		return nil, NewInvalidFormatError("输入为空")
@@ -91,12 +95,7 @@ func ParseHarSkipValidation(harFileBytes []byte) (*Har, error) {
 		return nil, ErrNotJsonContent
 	}
 
-	har := new(Har)
-	if err := json.Unmarshal(harFileBytes, har); err != nil {
-		return nil, WrapJSONUnmarshalError(err)
-	}
-
-	return har, nil
+	return parseHarFast(harFileBytes)
 }
 
 // Har 表示HTTP归档(HAR)文件的主结构
