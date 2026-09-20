@@ -9,7 +9,7 @@ When you need to embed HAR analysis in your own Go program, use the root-package
 ## Import and dependencies
 
 ```go
-import har "github.com/cyberspacesec/har-skills"
+import har "github.com/waystreamer/har-skills"
 ```
 
 ::: tip Zero runtime dependencies
@@ -26,7 +26,7 @@ package main
 import (
     "fmt"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

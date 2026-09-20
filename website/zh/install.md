@@ -14,12 +14,12 @@ HAR Skills 是一个单独的 `har` 二进制，无运行时依赖。下面给�
 ::: code-group
 
 ```bash [Linux x86_64]
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 ```
 
 ```bash [macOS Apple Silicon]
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 ```
 
@@ -49,14 +49,14 @@ xattr -d com.apple.quarantine /usr/local/bin/har
 | windows | x86_64 / i386 |
 | freebsd | x86_64 / i386 |
 
-下载文件名格式为 `har-skills_<version>_<os>_<arch>.tar.gz`（Windows 为 `.zip`）。到 [Releases 页面](https://github.com/cyberspacesec/har-skills/releases/latest) 按需选取。
+下载文件名格式为 `har-skills_<version>_<os>_<arch>.tar.gz`（Windows 为 `.zip`）。到 [Releases 页面](https://github.com/waystreamer/har-skills/releases/latest) 按需选取。
 
 ## 方式二：go install
 
 若已装 Go 1.19+，一行命令即可：
 
 ```bash
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 ```
 
 二进制会装到 `$GOPATH/bin`（或 `$GOBIN`），请确保该目录在 `PATH` 中：
@@ -76,7 +76,7 @@ export PATH="$(go env GOPATH)/bin:$PATH"
 适合需要自定义构建标签、注入版本信息或交叉编译的场景。
 
 ```bash
-git clone https://github.com/cyberspacesec/har-skills.git
+git clone https://github.com/waystreamer/har-skills.git
 cd har-skills
 go build -o har ./cmd/har/
 ```
@@ -86,7 +86,7 @@ go build -o har ./cmd/har/
 用 `-ldflags` 把 git tag 注入二进制，`har --version` 即可显示：
 
 ```bash
-go build -ldflags "-X github.com/cyberspacesec/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
+go build -ldflags "-X github.com/waystreamer/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
 ```
 
 ### 交叉编译
@@ -125,7 +125,7 @@ har -f testdata/example.har info
 | 安装方式 | 升级命令 |
 | --- | --- |
 | 预编译二进制 | 重新下载新版本压缩包并覆盖 `har` |
-| go install | `go install github.com/cyberspacesec/har-skills/cmd/har@latest` |
+| go install | `go install github.com/waystreamer/har-skills/cmd/har@latest` |
 | 源码构建 | `git pull && go build -o har ./cmd/har/` |
 
 ### 卸载

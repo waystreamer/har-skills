@@ -63,7 +63,7 @@ package main
 import (
     "fmt"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -138,7 +138,7 @@ merged := mergeFn(part1, part2, part3)
 package main
 
 import (
-    "github.com/cyberspacesec/har-skills"
+    "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -202,7 +202,7 @@ import (
     "path/filepath"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

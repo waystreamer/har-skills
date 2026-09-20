@@ -9,7 +9,7 @@ title: Go SDK 接入
 ## 导入与依赖
 
 ```go
-import har "github.com/cyberspacesec/har-skills"
+import har "github.com/waystreamer/har-skills"
 ```
 
 ::: tip 零运行时依赖
@@ -26,7 +26,7 @@ package main
 import (
     "fmt"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

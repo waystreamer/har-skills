@@ -62,7 +62,7 @@ flowchart TD
 `standard_impl.go` 让 `*Har` 自身实现 `HARProvider`，字段就是规范结构体本身——没有包装、没有转换、没有惰性。这是 `ParseHarFile` 的默认路径，也是所有 `ToStandard()` 的最终归宿。
 
 ```go
-import har "github.com/cyberspacesec/har-skills"
+import har "github.com/waystreamer/har-skills"
 
 // 从文件解析（默认 standard）
 h, err := har.ParseHarFile("capture.har")

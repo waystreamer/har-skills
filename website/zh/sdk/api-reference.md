@@ -5,7 +5,7 @@ titleTemplate: false
 
 # API 速查
 
-按功能分类列出根包 `har`（`github.com/cyberspacesec/har-skills`）的主要导出函数与方法。所有签名均与源码对齐；标记为「包级」的是包函数，其余是 `*Har`（或对应类型）的方法。`HARProvider` 是解析函数的统一返回接口，调用 `.ToStandard()` 即可拿到 `*Har` 使用全套 API。
+按功能分类列出根包 `har`（`github.com/waystreamer/har-skills`）的主要导出函数与方法。所有签名均与源码对齐；标记为「包级」的是包函数，其余是 `*Har`（或对应类型）的方法。`HARProvider` 是解析函数的统一返回接口，调用 `.ToStandard()` 即可拿到 `*Har` 使用全套 API。
 
 ## 解析
 

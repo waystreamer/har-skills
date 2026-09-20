@@ -77,6 +77,28 @@ func ParseHar(harFileBytes []byte) (*Har, error) {
 	return har, nil
 }
 
+// ParseHarSkipValidation 解析HAR字节数据但跳过加载期校验。
+//
+// 第三方抓包工具（Reqable/Charles/Fiddler 等）的导出常带有校验器拒绝
+// 但内容可分析的字段（timings 为 -1、缺失 mimeType、无名 cookie 等），
+// 分析类场景应先加载再容错处理，而不是整体拒绝。
+func ParseHarSkipValidation(harFileBytes []byte) (*Har, error) {
+	if len(harFileBytes) == 0 {
+		return nil, NewInvalidFormatError("输入为空")
+	}
+
+	if !isJSONContent(harFileBytes) {
+		return nil, ErrNotJsonContent
+	}
+
+	har := new(Har)
+	if err := json.Unmarshal(harFileBytes, har); err != nil {
+		return nil, WrapJSONUnmarshalError(err)
+	}
+
+	return har, nil
+}
+
 // Har 表示HTTP归档(HAR)文件的主结构
 //
 // Har结构是HAR格式的根对象，包含一个Log字段。

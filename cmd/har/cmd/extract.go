@@ -3,10 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
-	har "github.com/cyberspacesec/har-skills"
-	"github.com/cyberspacesec/har-skills/cmd/har/internal"
+	har "github.com/waystreamer/har-skills/pkg/har"
+	"github.com/waystreamer/har-skills/cmd/har/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +21,7 @@ var extractCmd = &cobra.Command{
 	Example: `  har -f capture.har extract
   har -f capture.har extract "api/users"
   har -f capture.har extract --index 0
+  har -f capture.har extract --regex "api/v[0-9]+"
   har -f capture.har extract --all --decode
   har -f capture.har extract --index 3 -o response.json`,
 	Args: cobra.MaximumNArgs(1),
@@ -34,17 +36,34 @@ var extractCmd = &cobra.Command{
 		entryIndex, _ := cmd.Flags().GetInt("index")
 		decode, _ := cmd.Flags().GetBool("decode")
 		extractAll, _ := cmd.Flags().GetBool("all")
+		useRegex, _ := cmd.Flags().GetBool("regex")
 
-		// 按索引提取
+		// 按索引提取（全局索引，即条目在 HAR log.entries 中的位置，与 list/find 输出一致）
 		if entryIndex >= 0 && entryIndex < len(h.Log.Entries) {
 			return extractSingleEntry(cmd, &h.Log.Entries[entryIndex], decode)
+		}
+
+		// 编译正则（如果启用）
+		var urlRe *regexp.Regexp
+		if useRegex && urlPattern != "" {
+			re, err := regexp.Compile(urlPattern)
+			if err != nil {
+				return fmt.Errorf("无效的正则表达式: %w", err)
+			}
+			urlRe = re
 		}
 
 		// 过滤匹配条目
 		var entries []har.Entries
 		for _, entry := range h.Log.Entries {
-			if urlPattern != "" && !strings.Contains(entry.Request.URL, urlPattern) {
-				continue
+			if urlPattern != "" {
+				if urlRe != nil {
+					if !urlRe.MatchString(entry.Request.URL) {
+						continue
+					}
+				} else if !strings.Contains(entry.Request.URL, urlPattern) {
+					continue
+				}
 			}
 			entries = append(entries, entry)
 		}
@@ -66,9 +85,10 @@ var extractCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(extractCmd)
 
-	extractCmd.Flags().Int("index", -1, "按索引提取指定条目")
+	extractCmd.Flags().Int("index", -1, "按全局索引提取指定条目（与 list/find 输出的 INDEX 一致）")
 	extractCmd.Flags().Bool("decode", true, "自动解码base64/压缩内容")
 	extractCmd.Flags().Bool("all", false, "提取所有匹配条目")
+	extractCmd.Flags().Bool("regex", false, "URL模式使用正则表达式")
 }
 
 // extractSingleEntry 提取单个条目的响应内容

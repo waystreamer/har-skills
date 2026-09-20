@@ -16,8 +16,8 @@ title: CLI Access
 Install:
 
 ```bash
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
-# or download a prebuilt binary from https://github.com/cyberspacesec/har-skills/releases/latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
+# or download a prebuilt binary from https://github.com/waystreamer/har-skills/releases/latest
 ```
 
 See [Global Flags](../cli/global-flags.md) for the full flag reference.

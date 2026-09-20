@@ -107,6 +107,52 @@ func ParseHarFileAuto(filePath string) (*Har, error) {
 	return ParseHarFile(filePath)
 }
 
+// ParseHarFileAutoSkipValidation 与 ParseHarFileAuto 相同，但跳过加载期校验。
+//
+// 供 CLI 的分析类子命令使用：第三方抓包工具（Reqable/Charles/Fiddler）的
+// 产物常带有规范允许但校验器拒绝的字段（如 timings=-1、缺失 mimeType），
+// 分析时不应因此拒绝加载整个文件。
+func ParseHarFileAutoSkipValidation(filePath string) (*Har, error) {
+	if isGzippedByExtension(filePath) {
+		return parseHarFileGzippedSkipValidation(filePath)
+	}
+
+	isGzipped, err := detectGzipMagicBytes(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if isGzipped {
+		return parseHarFileGzippedSkipValidation(filePath)
+	}
+
+	harFileBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, NewFileSystemError(fmt.Sprintf("无法读取文件 '%s'", filePath), err)
+	}
+	return ParseHarSkipValidation(harFileBytes)
+}
+
+// parseHarFileGzippedSkipValidation 解压 gzip HAR 并跳过校验
+func parseHarFileGzippedSkipValidation(filePath string) (*Har, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, NewFileSystemError(fmt.Sprintf("无法打开文件 '%s'", filePath), err)
+	}
+	defer file.Close()
+
+	gzReader, err := gzip.NewReader(file)
+	if err != nil {
+		return nil, NewFileSystemError(fmt.Sprintf("failed to create gzip reader for '%s'", filePath), err)
+	}
+	defer gzReader.Close()
+
+	data, err := io.ReadAll(gzReader)
+	if err != nil {
+		return nil, NewFileSystemError(fmt.Sprintf("无法解压文件 '%s'", filePath), err)
+	}
+	return ParseHarSkipValidation(data)
+}
+
 // NewStreamingParserFromReader creates a streaming entry iterator from an io.Reader.
 //
 // It reads all data into a buffer, then uses NewStreamingHarFromBytes

@@ -60,7 +60,7 @@ import CapabilityTree from './CapabilityTree.vue'
     <h2 class="har-section__title">Start</h2>
     <p class="har-section__lede">Three steps: install the binary, run one command, read one page.</p>
     <div class="har-cta__code"><pre><code># 1. Install
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 
 # 2. Run a command
 har -f capture.har info

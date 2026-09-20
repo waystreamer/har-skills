@@ -5,7 +5,7 @@ titleTemplate: false
 
 # API Reference
 
-A categorized quick-reference for the exported functions and methods of the root package `har` (`github.com/cyberspacesec/har-skills`). All signatures mirror the source. Items marked "package-level" are package functions; the rest are methods on `*Har` (or the relevant type). `HARProvider` is the unified return interface of the parse functions — call `.ToStandard()` to obtain a `*Har` and access the full API.
+A categorized quick-reference for the exported functions and methods of the root package `har` (`github.com/waystreamer/har-skills`). All signatures mirror the source. Items marked "package-level" are package functions; the rest are methods on `*Har` (or the relevant type). `HARProvider` is the unified return interface of the parse functions — call `.ToStandard()` to obtain a `*Har` and access the full API.
 
 ## Parsing
 

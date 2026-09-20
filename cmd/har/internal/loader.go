@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	har "github.com/cyberspacesec/har-skills"
+	har "github.com/waystreamer/har-skills/pkg/har"
 	"github.com/spf13/cobra"
 )
 
@@ -31,9 +31,9 @@ func LoadHar(cmd *cobra.Command, args []string) *har.Har {
 	return h
 }
 
-// LoadHarFromPath 从指定路径加载 HAR 文件（支持 gzip 自动检测）
+// LoadHarFromPath 从指定路径加载 HAR 文件（支持 gzip 自动检测，跳过加载期校验）
 func LoadHarFromPath(path string) (*har.Har, error) {
-	return har.ParseHarFileAuto(path)
+	return har.ParseHarFileAutoSkipValidation(path)
 }
 
 // LoadHarFromStdin 从标准输入加载 HAR 数据
@@ -44,7 +44,7 @@ func LoadHarFromStdin() *har.Har {
 		os.Exit(1)
 	}
 
-	h, err := har.ParseHar(data)
+	h, err := har.ParseHarSkipValidation(data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "错误: 无法解析HAR数据: %v\n", err)
 		os.Exit(1)

@@ -280,7 +280,7 @@ package main
 
 import (
     "fmt"
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

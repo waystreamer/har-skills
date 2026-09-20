@@ -24,17 +24,17 @@ flowchart LR
 ::: code-group
 
 ```bash [go install]
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 ```
 
 ```bash [预编译二进制（推荐）]
 # Linux x86_64
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 ```
 
 ```bash [源码构建]
-git clone https://github.com/cyberspacesec/har-skills.git
+git clone https://github.com/waystreamer/har-skills.git
 cd har-skills
 go build -o har ./cmd/har/
 ```

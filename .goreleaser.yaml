@@ -19,9 +19,9 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
-      - -X github.com/cyberspacesec/har-skills/cmd/har/cmd.version={{.Version}}
-      - -X github.com/cyberspacesec/har-skills/cmd/har/cmd.commit={{.Commit}}
-      - -X github.com/cyberspacesec/har-skills/cmd/har/cmd.date={{.Date}}
+      - -X github.com/waystreamer/har-skills/cmd/har/cmd.version={{.Version}}
+      - -X github.com/waystreamer/har-skills/cmd/har/cmd.commit={{.Commit}}
+      - -X github.com/waystreamer/har-skills/cmd/har/cmd.date={{.Date}}
     goos:
       - linux
       - darwin
@@ -99,7 +99,7 @@ changelog:
 
 release:
   github:
-    owner: cyberspacesec
+    owner: waystreamer
     name: har-skills
   draft: false
   prerelease: auto
@@ -107,21 +107,21 @@ release:
   header: |
     ## HAR Skills - AI Agent Skill for HAR File Analysis
 
-    🤖 作为 AI Agent Skill 使用：阅读 [CLAUDE.md](https://github.com/cyberspacesec/har-skills/blob/main/CLAUDE.md)
+    🤖 作为 AI Agent Skill 使用：阅读 [CLAUDE.md](https://github.com/waystreamer/har-skills/blob/main/CLAUDE.md)
 
-    📦 安装：`go install github.com/cyberspacesec/har-skills/cmd/har@latest`
+    📦 安装：`go install github.com/waystreamer/har-skills/cmd/har@latest`
   footer: |
     ---
 
-    **完整安装说明**：参见 [README](https://github.com/cyberspacesec/har-skills#readme)
+    **完整安装说明**：参见 [README](https://github.com/waystreamer/har-skills#readme)
 
 # Homebrew 和 Scoop 配置需在对应 tap/bucket 仓库创建后启用
 # brews:
 #   - name: har
-#     homepage: "https://github.com/cyberspacesec/har-skills"
+#     homepage: "https://github.com/waystreamer/har-skills"
 #     description: "HAR Skills — AI-oriented CLI tool for HAR file analysis"
 #     repository:
-#       owner: cyberspacesec
+#       owner: waystreamer
 #       name: homebrew-tap
 #     directory: Formula
 #     commit_author:
@@ -132,10 +132,10 @@ release:
 #
 # scoops:
 #   - name: har
-#     homepage: "https://github.com/cyberspacesec/har-skills"
+#     homepage: "https://github.com/waystreamer/har-skills"
 #     description: "HAR Skills — AI-oriented CLI tool for HAR file analysis"
 #     repository:
-#       owner: cyberspacesec
+#       owner: waystreamer
 #       name: scoop-bucket
 #     commit_author:
 #       name: goreleaserbot

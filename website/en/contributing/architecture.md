@@ -23,7 +23,7 @@ The top-down call chain: the CLI command layer calls the internal glue layer, wh
    └──────────────────────────┬──────────────────────────────────┘
                               │ calls
    ┌──────────────────────────┴──────────────────────────────────┐
-   │  SDK Root Package  github.com/cyberspacesec/har-skills       │
+   │  SDK Root Package  github.com/waystreamer/har-skills       │
    │  (package har)  41 .go modules · 4 parsing impls             │
    │                 unified by the HARProvider interface         │
    └──────────────────────────┬──────────────────────────────────┘
@@ -35,7 +35,7 @@ The top-down call chain: the CLI command layer calls the internal glue layer, wh
 
 ## Package Structure
 
-### SDK Root Package (`github.com/cyberspacesec/har-skills`, `package har`)
+### SDK Root Package (`github.com/waystreamer/har-skills`, `package har`)
 
 The 41 `.go` module files at the repository root carry all SDK capabilities: parsing (4 strategies), filtering, transformation, redaction, export, diff, merge, split, validation, security audit, cache / cookie / performance / waterfall analysis, builders, statistics, replay, and more. The package exposes two API surfaces — `*Har` and `HARProvider` — and has zero runtime dependencies (`testify` is test-only).
 

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyberspacesec/har-skills"
+	"github.com/waystreamer/har-skills/pkg/har"
 )
 
 // 统计类型

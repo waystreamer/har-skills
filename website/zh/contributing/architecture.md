@@ -22,7 +22,7 @@ HAR Skills 是一个面向 AI Agent 的 HAR 分析工具箱，由三个清晰分
    └──────────────────────────┬──────────────────────────────────┘
                               │ 调用
    ┌──────────────────────────┴──────────────────────────────────┐
-   │  SDK 根包    github.com/cyberspacesec/har-skills (package har)│
+   │  SDK 根包    github.com/waystreamer/har-skills (package har)│
    │  41 个 .go 模块 · 4 种解析实现 · HARProvider 接口统一        │
    └──────────────────────────┬──────────────────────────────────┘
                               │ 实现
@@ -33,7 +33,7 @@ HAR Skills 是一个面向 AI Agent 的 HAR 分析工具箱，由三个清晰分
 
 ## 包结构
 
-### SDK 根包（`github.com/cyberspacesec/har-skills`，`package har`）
+### SDK 根包（`github.com/waystreamer/har-skills`，`package har`）
 
 仓库根目录下的 41 个 `.go` 模块文件承载了全部 SDK 能力：解析（4 种策略）、过滤、转换、脱敏、导出、差异、合并、拆分、校验、安全审计、缓存 / Cookie / 性能 / 瀑布图分析、构建器、统计、重放等。该包对外暴露 `*Har` 与 `HARProvider` 两套 API，运行时零外部依赖（`testify` 仅用于测试）。
 

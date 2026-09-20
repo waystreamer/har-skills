@@ -10,7 +10,7 @@ HAR Skills is designed from day one as an **AI Agent Skill**: the `CLAUDE.md` at
 
 Skill access = hand an "LLM-readable manual" to an Agent so it can autonomously complete HAR analysis tasks.
 
-- **The artifact**: [`CLAUDE.md`](https://github.com/cyberspacesec/har-skills/blob/main/CLAUDE.md) at the repo root, ~400 lines, covering all 24 CLI commands and 70+ SDK methods.
+- **The artifact**: [`CLAUDE.md`](https://github.com/waystreamer/har-skills/blob/main/CLAUDE.md) at the repo root, ~400 lines, covering all 24 CLI commands and 70+ SDK methods.
 - **Structure**: progressive disclosure — from Quick Start to a 5-level command reference, then an SDK cheat sheet and workflows. The Agent drills down on demand instead of reading everything at once.
 - **Outcome**: after reading, the Agent knows which commands exist, their flags, output formats, and typical combinations — no trial and error needed.
 
@@ -61,9 +61,9 @@ Send the prompt below to an Agent and it will install the binary and start analy
 You are a HAR file analysis assistant using the har-skills tool.
 
 Step 1 — install the CLI (pick one):
-  go install github.com/cyberspacesec/har-skills/cmd/har@latest
+  go install github.com/waystreamer/har-skills/cmd/har@latest
 or download the tar.gz for your platform from
-  https://github.com/cyberspacesec/har-skills/releases/latest
+  https://github.com/waystreamer/har-skills/releases/latest
 extract it and put `har` on your PATH.
 
 Step 2 — read CLAUDE.md at the repo root (or online) to learn the 24 CLI

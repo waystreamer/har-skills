@@ -8,7 +8,7 @@ Thank you for your interest in HAR Skills! We welcome contributions of every kin
 
 ## Reporting Issues
 
-Before opening a new issue, please search the [existing issues](https://github.com/cyberspacesec/har-skills/issues) to avoid duplicates. If nothing matches, open a new one and include as many of the following elements as possible so maintainers can act quickly:
+Before opening a new issue, please search the [existing issues](https://github.com/waystreamer/har-skills/issues) to avoid duplicates. If nothing matches, open a new one and include as many of the following elements as possible so maintainers can act quickly:
 
 - **Version**: the `har` CLI version (`har --version` or `git describe --tags`) and your Go version (`go version`).
 - **Platform**: OS and architecture (e.g. `linux/amd64`, `darwin/arm64`). If you use a pre-built binary, note that it came from Releases.
@@ -149,7 +149,7 @@ Common local-preview pitfalls:
 
 ## License
 
-This project is released under the [MIT License](https://github.com/cyberspacesec/har-skills/blob/main/LICENSE). By contributing code, you agree that your contributions will be licensed under the same MIT License.
+This project is released under the [MIT License](https://github.com/waystreamer/har-skills/blob/main/LICENSE). By contributing code, you agree that your contributions will be licensed under the same MIT License.
 
 ## Code of Conduct
 
@@ -190,7 +190,7 @@ Before opening a Pull Request, walk through this checklist:
 Every example under `examples/` is a standalone `package main`. Steps to add one:
 
 1. Create a new subdirectory under `examples/` (e.g. `examples/audit/`) and add a `main.go`.
-2. The top of `main.go` declares `package main`; import the SDK as `har "github.com/cyberspacesec/har-skills"`.
+2. The top of `main.go` declares `package main`; import the SDK as `har "github.com/waystreamer/har-skills"`.
 3. Prefer real HAR files from `testdata/` as default input, avoiding any dependency on external networks.
 4. Provide command-line flags (via the standard library `flag`) so users can supply a file path and output format.
 5. Register the new example in the [Examples](/en/examples/) page on this site and in the `examples/` directory layout.

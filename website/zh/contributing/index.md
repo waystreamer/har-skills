@@ -8,7 +8,7 @@ title: 贡献指南
 
 ## 报告问题
 
-在提交新 issue 之前，请先搜索 [现有 issue](https://github.com/cyberspacesec/har-skills/issues) 是否已经覆盖了你的问题，避免重复。如果没有，请新建一个 issue，并尽量包含以下要素，以便维护者快速定位：
+在提交新 issue 之前，请先搜索 [现有 issue](https://github.com/waystreamer/har-skills/issues) 是否已经覆盖了你的问题，避免重复。如果没有，请新建一个 issue，并尽量包含以下要素，以便维护者快速定位：
 
 - **版本信息**：`har` CLI 版本（`har --version` 或 `git describe --tags`）、Go 版本（`go version`）。
 - **平台信息**：操作系统与架构（如 `linux/amd64`、`darwin/arm64`），如使用预编译二进制请标注下载来源。
@@ -149,7 +149,7 @@ npm run docs:preview # 预览构建产物
 
 ## 许可证
 
-本项目基于 [MIT License](https://github.com/cyberspacesec/har-skills/blob/main/LICENSE) 发布。通过贡献代码，你同意你的贡献将在同一 MIT 许可证下发布。
+本项目基于 [MIT License](https://github.com/waystreamer/har-skills/blob/main/LICENSE) 发布。通过贡献代码，你同意你的贡献将在同一 MIT 许可证下发布。
 
 ## 行为准则
 
@@ -190,7 +190,7 @@ npm run docs:preview # 预览构建产物
 `examples/` 下的每个示例都是独立的 `package main`。新增示例的步骤：
 
 1. 在 `examples/` 下新建子目录（如 `examples/audit/`），添加 `main.go`。
-2. `main.go` 顶部 `package main`，`import` SDK 为 `har "github.com/cyberspacesec/har-skills"`。
+2. `main.go` 顶部 `package main`，`import` SDK 为 `har "github.com/waystreamer/har-skills"`。
 3. 优先使用 `testdata/` 中的真实 HAR 文件作为默认输入，避免依赖外部网络。
 4. 提供命令行参数（用标准库 `flag`）让用户指定文件路径与输出格式。
 5. 在本站 [示例代码集](/zh/examples/) 页面与 `examples/` 的目录结构中登记新示例。

@@ -1,4 +1,4 @@
-module github.com/cyberspacesec/har-skills
+module github.com/waystreamer/har-skills
 
 go 1.24
 

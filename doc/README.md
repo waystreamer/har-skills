@@ -14,7 +14,7 @@ This library provides tools for working with HAR files in Go, offering different
 ## Installation
 
 ```
-go get github.com/cyberspacesec/har-skills
+go get github.com/waystreamer/har-skills
 ```
 
 ## Basic Usage
@@ -26,7 +26,7 @@ import (
     "fmt"
     "log"
     
-    "github.com/cyberspacesec/har-skills"
+    "github.com/waystreamer/har-skills"
 )
 
 func main() {

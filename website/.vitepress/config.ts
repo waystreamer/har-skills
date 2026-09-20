@@ -213,7 +213,7 @@ export default defineConfig({
           { text: '示例', link: '/zh/examples/' },
           {
             text: 'GitHub',
-            link: 'https://github.com/cyberspacesec/har-skills'
+            link: 'https://github.com/waystreamer/har-skills'
           }
         ],
         sidebar: ZH_SIDEBAR,
@@ -224,7 +224,7 @@ export default defineConfig({
         sidebarTitle: '目录',
         editLink: {
           text: '在 GitHub 上编辑此页',
-          link: 'https://github.com/cyberspacesec/har-skills/edit/main/website'
+          link: 'https://github.com/waystreamer/har-skills/edit/main/website'
         },
         search: { provider: 'local', options: { translations: { button: { buttonText: '搜索文档', buttonAriaLabel: '搜索' } } } }
       }
@@ -242,7 +242,7 @@ export default defineConfig({
           { text: 'Examples', link: '/en/examples/' },
           {
             text: 'GitHub',
-            link: 'https://github.com/cyberspacesec/har-skills'
+            link: 'https://github.com/waystreamer/har-skills'
           }
         ],
         sidebar: EN_SIDEBAR,
@@ -250,7 +250,7 @@ export default defineConfig({
         lastUpdatedText: 'Last updated',
         editLink: {
           text: 'Edit this page on GitHub',
-          link: 'https://github.com/cyberspacesec/har-skills/edit/main/website'
+          link: 'https://github.com/waystreamer/har-skills/edit/main/website'
         },
         search: { provider: 'local' }
       }
@@ -260,7 +260,7 @@ export default defineConfig({
   themeConfig: {
     logo: '/favicon.svg',
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/cyberspacesec/har-skills' }
+      { icon: 'github', link: 'https://github.com/waystreamer/har-skills' }
     ],
     footer: {
       message: '基于 MIT 协议发布 · Released under the MIT License',

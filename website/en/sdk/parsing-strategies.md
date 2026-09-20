@@ -62,7 +62,7 @@ They are the same type under different storage/access conventions: standard read
 `standard_impl.go` makes `*Har` itself implement `HARProvider`; the fields are exactly the spec structs — no wrapping, no conversion, no laziness. This is the default path of `ParseHarFile`, and the final destination of every `ToStandard()` call.
 
 ```go
-import har "github.com/cyberspacesec/har-skills"
+import har "github.com/waystreamer/har-skills"
 
 // Parse from a file (standard by default)
 h, err := har.ParseHarFile("capture.har")

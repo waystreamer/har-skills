@@ -5,7 +5,7 @@
 
 **Goal:** 核查全仓库 Go 包路径与 GitHub 仓库 `cyberspacesec/har-skills` 的一致性，并复核单元测试覆盖率是否仍为 100%，形成交付验收结论。
 
-**Architecture:** 需求两项均属"核查性"而非"开发性"任务——无新功能需实现，仅需系统性调研全仓库 `package` 声明、`import` 路径、`go.mod` module 声明、goreleaser ldflags 注入路径，并复跑覆盖率测试（含 race 模式）确认 100% 稳健。数据流：go.mod module 声明 → 各子包 package 声明 → import 引用 → goreleaser ldflags `-X` 注入路径 → 实际构建产物版本输出，全链路核对同一 module 路径 `github.com/cyberspacesec/har-skills`。
+**Architecture:** 需求两项均属"核查性"而非"开发性"任务——无新功能需实现，仅需系统性调研全仓库 `package` 声明、`import` 路径、`go.mod` module 声明、goreleaser ldflags 注入路径，并复跑覆盖率测试（含 race 模式）确认 100% 稳健。数据流：go.mod module 声明 → 各子包 package 声明 → import 引用 → goreleaser ldflags `-X` 注入路径 → 实际构建产物版本输出，全链路核对同一 module 路径 `github.com/waystreamer/har-skills`。
 
 **Tech Stack:** Go 1.24（go.mod），GoReleaser v2 schema，goreleaser-action `~> v2`，cobra/viper CLI，golangci-lint，GitHub Actions
 
@@ -29,7 +29,7 @@
 
 Run: `head -1 go.mod && git remote -v`
 Expected:
-  - Output contains: `module github.com/cyberspacesec/har-skills`
+  - Output contains: `module github.com/waystreamer/har-skills`
   - Output contains: `git@github.com:cyberspacesec/har-skills.git`
   - 两者 owner/name 段完全一致
 
@@ -37,10 +37,10 @@ Expected:
 
 Run: `find cmd -name "*.go" | while read f; do echo "$f: $(grep -m1 '^package ' $f)"; done`
 Expected:
-  - `cmd/har/main.go: package main`，import `github.com/cyberspacesec/har-skills/cmd/har/cmd`
+  - `cmd/har/main.go: package main`，import `github.com/waystreamer/har-skills/cmd/har/cmd`
   - `cmd/har/cmd/*.go: package cmd`
   - `cmd/har/internal/*.go: package internal`
-  - 所有 import 均以 `github.com/cyberspacesec/har-skills` 为根
+  - 所有 import 均以 `github.com/waystreamer/har-skills` 为根
 
 - [x] **Step 3: 全仓库扫描旧模块路径 `cyberspacesec/go-har` 残留**
 
@@ -52,14 +52,14 @@ Expected:
 
 Run: `grep -n "X github.com" .goreleaser.yaml`
 Expected:
-  - `-X github.com/cyberspacesec/har-skills/cmd/har/cmd.version={{.Version}}`
-  - `-X github.com/cyberspacesec/har-skills/cmd/har/cmd.commit={{.Commit}}`
-  - `-X github.com/cyberspacesec/har-skills/cmd/har/cmd.date={{.Date}}`
+  - `-X github.com/waystreamer/har-skills/cmd/har/cmd.version={{.Version}}`
+  - `-X github.com/waystreamer/har-skills/cmd/har/cmd.commit={{.Commit}}`
+  - `-X github.com/waystreamer/har-skills/cmd/har/cmd.date={{.Date}}`
   - 与 `cmd/har/cmd/root.go` 中 `var version/commit/date` 声明的包路径一致
 
 - [x] **Step 5: 本地构建模拟 ldflags 验证版本注入**
 
-Run: `go build -ldflags "-X github.com/cyberspacesec/har-skills/cmd/har/cmd.version=v0.1.2-test -X github.com/cyberspacesec/har-skills/cmd/har/cmd.commit=abc123 -X github.com/cyberspacesec/har-skills/cmd/har/cmd.date=2026-07-21" -o /tmp/har-ldflag-test ./cmd/har/ && /tmp/har-ldflag-test --version`
+Run: `go build -ldflags "-X github.com/waystreamer/har-skills/cmd/har/cmd.version=v0.1.2-test -X github.com/waystreamer/har-skills/cmd/har/cmd.commit=abc123 -X github.com/waystreamer/har-skills/cmd/har/cmd.date=2026-07-21" -o /tmp/har-ldflag-test ./cmd/har/ && /tmp/har-ldflag-test --version`
 Expected:
   - Exit code: 0
   - Output contains: `HAR Skills v0.1.2-test`、`commit: abc123`、`date: 2026-07-21`
@@ -114,7 +114,7 @@ Expected:
 
 | 需求 | 状态 | 证据 |
 |------|------|------|
-| 包路径与 GitHub 仓库一致 | ✅ 已一致 | `module github.com/cyberspacesec/har-skills` = GitHub `cyberspacesec/har-skills`；全仓库零旧路径 `go-har` 残留；ldflags 注入路径与实际包路径对齐；本地构建 `--version` 三变量注入成功 |
+| 包路径与 GitHub 仓库一致 | ✅ 已一致 | `module github.com/waystreamer/har-skills` = GitHub `cyberspacesec/har-skills`；全仓库零旧路径 `go-har` 残留；ldflags 注入路径与实际包路径对齐；本地构建 `--version` 三变量注入成功 |
 | 单元测试覆盖率 100% | ✅ 已达 100% | 常规模式 `coverage: 100.0%`；race 模式 `coverage: 100.0%`；函数级无未达 100% 的函数 |
 
 - [x] **Step 2: 提交 Plan 文档**

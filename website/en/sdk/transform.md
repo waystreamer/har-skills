@@ -51,7 +51,7 @@ import (
     "fmt"
     "os"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -162,7 +162,7 @@ import (
     "fmt"
     "os"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

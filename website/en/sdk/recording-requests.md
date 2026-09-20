@@ -135,7 +135,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 // capture is a bundle of data the upper mapping system captured:
@@ -268,7 +268,7 @@ import (
     "sync"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -391,7 +391,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -514,7 +514,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

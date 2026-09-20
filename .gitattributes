@@ -1,0 +1,5 @@
+# Go 源码统一 LF
+*.go text eol=lf
+# 测试数据保持原始字节
+*.har -text
+*.har.gz -text

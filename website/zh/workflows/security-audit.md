@@ -275,7 +275,7 @@ import (
     "fmt"
     "log"
     "os"
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

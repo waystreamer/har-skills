@@ -6,8 +6,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	har "github.com/cyberspacesec/har-skills"
-	"github.com/cyberspacesec/har-skills/cmd/har/internal"
+	har "github.com/waystreamer/har-skills/pkg/har"
+	"github.com/waystreamer/har-skills/cmd/har/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,10 @@ var findCmd = &cobra.Command{
 	Short: "Search HAR entries",
 	Long: `Search HAR entries by URL, status code, or conditions. Supports regex URL matching,
 status code range, content type, domain, request/response headers, cookies, resource type,
-time range, server IP, connection ID, cache hits, slow/fast/largest requests, etc.`,
+time range, server IP, connection ID, cache hits, slow/fast/largest requests, etc.
+
+The INDEX column is the global index of the entry in the HAR log.entries array
+and can be passed directly to "extract --index" or "diff --index-a/--index-b".`,
 	Example: `  har -f capture.har find "api/users"
   har -f capture.har find --regex "api/v[0-9]+"
   har -f capture.har find --errors
@@ -66,17 +69,16 @@ time range, server IP, connection ID, cache hits, slow/fast/largest requests, et
 		fastest, _ := cmd.Flags().GetInt("fastest")
 		largest, _ := cmd.Flags().GetInt("largest")
 		limit, _ := cmd.Flags().GetInt("limit")
+		urlMax, _ := cmd.Flags().GetInt("url-max")
 
 		// 构建过滤选项
 		opts := []har.FilterOption{}
 
 		// URL模式匹配
 		if pattern != "" {
+			opts = append(opts, har.WithFilterURL(pattern))
 			if useRegex {
-				opts = append(opts, har.WithFilterURL(pattern))
 				opts = append(opts, har.WithFilterRegex())
-			} else {
-				opts = append(opts, har.WithFilterURL(pattern))
 			}
 		}
 
@@ -116,8 +118,8 @@ time range, server IP, connection ID, cache hits, slow/fast/largest requests, et
 		}
 
 		// 请求头过滤
-		for _, h := range headers {
-			parts := strings.SplitN(h, ":", 2)
+		for _, hdr := range headers {
+			parts := strings.SplitN(hdr, ":", 2)
 			name := parts[0]
 			value := ""
 			if len(parts) > 1 {
@@ -126,43 +128,40 @@ time range, server IP, connection ID, cache hits, slow/fast/largest requests, et
 			opts = append(opts, har.WithFilterHeader(name, value))
 		}
 
-		// 执行过滤
-		var result *har.FilterResult
+		// 执行过滤，转换为带全局索引的结果
+		var ei *entryIndex
 		if len(opts) > 0 {
-			result = h.FilterWith(opts...)
+			ei = fromFilterResult(h, h.FilterWith(opts...))
 		} else {
-			result = &har.FilterResult{Entries: h.Log.Entries}
+			ei = newEntryIndex(h)
+		}
+
+		// intersectWith 将另一个过滤结果（按全局索引）与当前结果求交集
+		intersectWith := func(other *entryIndex) {
+			ei.filterByGlobalIndexSet(other.globalIndexSet())
 		}
 
 		// 按域名过滤（需单独处理）
 		if domain != "" {
-			var filtered []har.Entries
-			for _, entry := range result.Entries {
-				if d := har.ExtractDomain(entry.Request.URL); d == domain {
-					filtered = append(filtered, entry)
-				}
-			}
-			result = &har.FilterResult{Entries: filtered}
+			ei.filterByPredicate(func(e *har.Entries) bool {
+				return har.ExtractDomain(e.Request.URL) == domain
+			})
 		}
 
 		// 响应头过滤
-		if len(responseHeaders) > 0 {
-			for _, rh := range responseHeaders {
-				parts := strings.SplitN(rh, ":", 2)
-				name := parts[0]
-				value := ""
-				if len(parts) > 1 {
-					value = strings.TrimSpace(parts[1])
-				}
-				respResult := h.FindByResponseHeader(name, value)
-				result = intersectResults(result, respResult)
+		for _, rh := range responseHeaders {
+			parts := strings.SplitN(rh, ":", 2)
+			name := parts[0]
+			value := ""
+			if len(parts) > 1 {
+				value = strings.TrimSpace(parts[1])
 			}
+			intersectWith(fromFilterResult(h, h.FindByResponseHeader(name, value)))
 		}
 
 		// Cookie过滤
 		if cookieName != "" {
-			cookieResult := h.FindByCookie(cookieName)
-			result = intersectResults(result, cookieResult)
+			intersectWith(fromFilterResult(h, h.FindByCookie(cookieName)))
 		}
 
 		// 时间范围过滤
@@ -183,82 +182,51 @@ time range, server IP, connection ID, cache hits, slow/fast/largest requests, et
 				}
 				endTime = t
 			}
-			timeResult := h.FindByTimeRange(startTime, endTime)
-			result = intersectResults(result, timeResult)
+			intersectWith(fromFilterResult(h, h.FindByTimeRange(startTime, endTime)))
 		}
 
 		// Server IP过滤
 		if serverIP != "" {
-			ipResult := h.FindByServerIP(serverIP)
-			result = intersectResults(result, ipResult)
+			intersectWith(fromFilterResult(h, h.FindByServerIP(serverIP)))
 		}
 
 		// Connection过滤
 		if connection != "" {
-			connResult := h.FindByConnection(connection)
-			result = intersectResults(result, connResult)
+			intersectWith(fromFilterResult(h, h.FindByConnection(connection)))
 		}
 
 		// 缓存命中过滤
 		if cacheHits {
-			cacheResult := h.FindCacheHits()
-			result = intersectResults(result, cacheResult)
+			intersectWith(fromFilterResult(h, h.FindCacheHits()))
 		}
 
 		// 重定向过滤
 		if redirects {
-			redirectResult := h.FindRedirects()
-			result = intersectResults(result, redirectResult)
+			intersectWith(fromFilterResult(h, h.FindRedirects()))
 		}
 
 		// Slowest N requests
 		if slowest > 0 {
-			slowestEntries := h.SlowestRequests(slowest)
-			result = intersectResults(result, &har.FilterResult{Entries: slowestEntries})
+			intersectWith(fromFilterResult(h, &har.FilterResult{Entries: h.SlowestRequests(slowest)}))
 		}
 
 		// Fastest N requests
 		if fastest > 0 {
-			fastestEntries := h.FastestRequests(fastest)
-			result = intersectResults(result, &har.FilterResult{Entries: fastestEntries})
+			intersectWith(fromFilterResult(h, &har.FilterResult{Entries: h.FastestRequests(fastest)}))
 		}
 
 		// Largest N responses
 		if largest > 0 {
-			largestEntries := h.LargestResponses(largest)
-			result = intersectResults(result, &har.FilterResult{Entries: largestEntries})
+			intersectWith(fromFilterResult(h, &har.FilterResult{Entries: h.LargestResponses(largest)}))
 		}
 
 		// 限制条数
-		if limit > 0 {
-			result.Limit(limit)
-		}
+		ei.limit(limit)
 
-		return internal.WriteOutput(cmd, buildListJSON(result), func() string {
-			return formatFindTable(result)
+		return internal.WriteOutput(cmd, buildListJSON(ei), func() string {
+			return formatFindTable(ei, urlMax)
 		}, nil)
 	},
-}
-
-// intersectResults 取两个FilterResult的交集
-func intersectResults(a, b *har.FilterResult) *har.FilterResult {
-	if a == nil {
-		return b
-	}
-	if b == nil {
-		return a
-	}
-	bSet := make(map[string]bool)
-	for _, e := range b.Entries {
-		bSet[e.Request.URL+e.Request.Method] = true
-	}
-	var filtered []har.Entries
-	for _, entry := range a.Entries {
-		if bSet[entry.Request.URL+entry.Request.Method] {
-			filtered = append(filtered, entry)
-		}
-	}
-	return &har.FilterResult{Entries: filtered}
 }
 
 func init() {
@@ -296,20 +264,22 @@ func init() {
 	findCmd.Flags().Bool("cache-hits", false, "Find requests with cache hits")
 	// Output
 	findCmd.Flags().IntP("limit", "n", 0, "Limit output to N entries (0=all)")
+	findCmd.Flags().Int("url-max", 0, "Truncate URL display to N chars (0=no truncation; use 60 for App captures)")
 }
 
 // formatFindTable 格式化搜索结果为tabwriter表格
-func formatFindTable(result *har.FilterResult) string {
+// INDEX 列是全局索引，可直接用于 extract --index
+func formatFindTable(ei *entryIndex, urlMax int) string {
 	var sb tabWriterBuf
 
 	w := tabwriter.NewWriter(&sb, 0, 0, 2, ' ', 0)
 	fmt.Fprintf(w, "INDEX\tMETHOD\tSTATUS\tSIZE\tTIME\tURL\n")
 
-	for i, entry := range result.Entries {
+	for i, entry := range ei.entries {
 		size := internal.FormatBytes(entry.Response.Content.Size)
 		dur := internal.FormatDuration(entry.Time)
 		fmt.Fprintf(w, "%d\t%s\t%d\t%s\t%s\t%s\n",
-			i, entry.Request.Method, entry.Response.Status, size, dur, entry.Request.URL)
+			ei.gidx[i], entry.Request.Method, entry.Response.Status, size, dur, entry.Request.URL)
 	}
 	w.Flush()
 

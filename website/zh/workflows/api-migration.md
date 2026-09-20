@@ -326,7 +326,7 @@ import (
     "log"
     "os"
     "time"
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

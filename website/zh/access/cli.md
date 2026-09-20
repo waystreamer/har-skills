@@ -16,8 +16,8 @@ title: CLI 接入
 安装：
 
 ```bash
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
-# 或从 https://github.com/cyberspacesec/har-skills/releases/latest 下载预编译二进制
+go install github.com/waystreamer/har-skills/cmd/har@latest
+# 或从 https://github.com/waystreamer/har-skills/releases/latest 下载预编译二进制
 ```
 
 全局参数的完整说明见 [全局参数](../cli/global-flags.md)。

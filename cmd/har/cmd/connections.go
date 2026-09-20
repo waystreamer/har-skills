@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/cyberspacesec/har-skills/cmd/har/internal"
+	"github.com/waystreamer/har-skills/cmd/har/internal"
 	"github.com/spf13/cobra"
 )
 

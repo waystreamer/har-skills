@@ -8,7 +8,29 @@
 - **SDK** (root package): 40 Go modules with 70+ methods for HAR parsing, analysis, transformation, and export
 - **CLI** (`cmd/har/`): 23 Cobra-based commands exposing all SDK capabilities via terminal
 - **Skill Docs**: Progressive disclosure documentation (this file) for AI agent consumption
-- **Install**: `go install github.com/cyberspacesec/har-skills/cmd/har@latest`
+- **Install**: `go install github.com/waystreamer/har-skills/cmd/har@latest`
+
+## 本 fork 的分层定位：侦察用 CLI，取证用 Python
+
+这是面向**第三方 App 抓包逆向**的 fork。与上游（面向自家站点审计）的关键差异：
+
+**已修复的坑**（上游 v0.1.1 存在）：
+1. **加载即强校验** —— Reqable/Charles/Fiddler 导出常带 `timings=-1`、缺失 `mimeType`、无名 cookie 等，上游任何子命令都直接拒绝加载并吐几百 KB 错误。本 fork 加载期跳过校验（SDK 新增 `ParseHarSkipValidation` / `ParseHarFileAutoSkipValidation`），需要合规文件时用 `har sanitize` 显式产出。
+2. **INDEX 是结果集相对序号** —— `find "home"` 返回 0-8，但那不是全局 entry 号，倒序导出的 HAR 根本对不上。本 fork `list`/`find` 输出的 INDEX 是全局索引，可直接喂 `extract --index` / `diff-entry --index-a`。
+3. **diff 粒度太粗** —— 上游 diff 按文件比，只报 header 名和响应体。同接口两次调用的字段级对比用 `diff-entry`。
+4. **Cookie 溯源缺失** —— 上游 cookie 只做安全审计统计。"这个 cookie 是谁发的、谁在用"用 `cookie-trace`。
+5. **`-o` 的 `/tmp` 路径陷阱** —— CLI 是原生 Windows 程序，`-o /tmp/x.json` 会落到 `%LOCALAPPDATA%\Temp`，不要用 bash 路径去读。这条不是代码问题，是平台差异，只能靠文档提醒。
+
+**什么时候放下 CLI 改用 Python**（CLI 做不了的取证层）：
+- 字段级 diff 已经由 `diff-entry` 覆盖；但更复杂的"链式"分析（比如"所有 Referer 是页面 P 的请求里，哪些带了你 ClientInfo 里的值"）CLI 没有对应原语，直接写 Python 遍历。
+- 自定义聚合/聚类（按 `netloc+path` 聚类、按某 header 值分组统计）——CLI 的过滤是固定集合，超出就写 Python。
+- 长 URL 的二次加工——`--url-max` 只是截断显示，要按 urlsplit 拆出 netloc/path 再统计，还是 Python。
+
+**侦察层 CLI 仍然是最优**（比手写 Python 快得多）：
+```
+info → find → extract --index → export curl/python → redact
+```
+外加本 fork 新增的 `diff-entry` / `cookie-trace` / `sanitize`。
 
 ## Quick Start (CLI)
 
@@ -17,15 +39,15 @@
 **Option 1: Download Pre-built Binary (Recommended)**
 
 Download the latest release for your platform from:
-https://github.com/cyberspacesec/har-skills/releases/latest
+https://github.com/waystreamer/har-skills/releases/latest
 
 ```bash
 # Linux x86_64 example
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 
 # macOS Apple Silicon example
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 
 # Windows: download .zip, extract har.exe, add to PATH
@@ -36,18 +58,18 @@ Available platforms: linux (x86_64/arm64/armv6/armv7/i386), darwin (x86_64/arm64
 **Option 2: Go Install**
 
 ```bash
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 ```
 
 **Option 3: Build from Source**
 
 ```bash
-git clone https://github.com/cyberspacesec/har-skills.git
+git clone https://github.com/waystreamer/har-skills.git
 cd har-skills
 go build -o har ./cmd/har/
 
 # With version info
-go build -ldflags "-X github.com/cyberspacesec/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
+go build -ldflags "-X github.com/waystreamer/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
 
 # Cross-compile for other platforms
 GOOS=darwin GOARCH=arm64 go build -o har-darwin-arm64 ./cmd/har/
@@ -202,6 +224,39 @@ har diff a.har b.har --ignore-headers Cookie,Date  # Ignore specific headers
 
 **Flags**: `--ignore-headers` (stringSlice), `--ignore-timings`, `--ignore-dates`, `--include-body`, `--compare-by-url`
 
+#### `diff-entry` — Field-Level Diff of Two Entries (本 fork 新增)
+
+Field-by-field diff of two individual entries — the common reverse-engineering case of "the same API was called twice, one succeeded one failed; show me exactly which query param / cookie / header differs". `diff` compares whole files and only reports header names + response body; `diff-entry` compares two specific entries field by field.
+
+```bash
+# Same HAR: entry 42 vs entry 87 (use global INDEX from find/list)
+har -f app.har diff-entry --index-a 42 --index-b 87
+
+# Cross-file: /sign in a.har vs /sign in b.har
+har diff-entry a.har b.har --url-a "/sign" --url-b "/sign"
+
+# Large responses: skip the body, look at request side only
+har -f app.har diff-entry --index-a 42 --index-b 87 --skip-body
+
+# Ignore noisy per-request fields
+har -f app.har diff-entry --index-a 42 --index-b 87 --ignore-query t,timestamp --ignore-cookies PANPSC
+```
+
+**Flags**: `--index-a` `--index-b` (global index from `find`/`list`), `--url-a` `--url-b` (URL substring, first match), `--skip-body`, `--ignore-headers`, `--ignore-cookies`, `--ignore-query`
+
+Output groups differences by `meta` / `query` / `request-header` / `cookie` / `post-param` / `response-header` / `response-cookie` / `response-body`, with `<absent>` marking a field present on only one side.
+
+#### `sanitize` — Fix Third-Party HAR Exports (本 fork 新增)
+
+Clean a HAR exported by Reqable/Charles/Fiddler so strict validators accept it. Operates on raw JSON, so even badly broken files load. Original file is never modified — always writes to `-o`.
+
+```bash
+har sanitize raw.har -o clean.har
+har sanitize raw.har -o clean.har --fix-time   # fill missing startedDateTime with epoch instead of dropping
+```
+
+Fixes: `timings.send/wait/receive` = -1 or missing → 0; negative optional timings → -1; negative/missing `entry.time` → 0; missing `content.mimeType` / `postData.mimeType` → `application/octet-stream`; empty cookie/header/query names → `unnamed-N`; broken responses (status outside 100..599 or no `httpVersion`) → dropped and counted.
+
 #### `merge` — Merge HAR Files
 
 Combine multiple HAR files into one.
@@ -308,6 +363,20 @@ har -f capture.har cookie --severity medium       # Only MEDIUM+ findings
 ```
 
 **Flags**: `--audit` (default true), `--evolution`, `--name`, `--severity`
+
+#### `cookie-trace` — Cookie Provenance Trace (本 fork 新增)
+
+Answer the reverse-engineering question directly: "which response set this cookie, which requests then carried it, and when did the value change?" `cookie --evolution` dumps a full timeline; `cookie-trace` gives the three-part answer (SET / SENT / changes).
+
+```bash
+har -f capture.har cookie-trace BDUSS                          # full trace with values
+har -f capture.har cookie-trace PANPSC --show-value=false     # positions only, values as <len:NN>
+har -f capture.har cookie-trace token --url-max 60            # truncate long App URLs
+```
+
+**Flags**: `--show-value` (default true), `--url-max` (0 = no truncation)
+
+Output: first-set location (global index usable with `extract --index`), then a timeline of `set`/`sent` events with `*` marking value changes. If the cookie appears in requests but was never set inside this HAR, that means the set happened before recording started.
 
 #### `cache` — Cache Analysis
 
@@ -465,7 +534,7 @@ har -f capture.har replay --save-har results.har # Save replay results as HAR
 ### Import
 
 ```go
-import har "github.com/cyberspacesec/har-skills"
+import har "github.com/waystreamer/har-skills"
 ```
 
 ### Parse
@@ -686,7 +755,7 @@ har -f clean.har export postman -o collection.json
 ### CLI Install Targets
 ```bash
 # Install globally
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 
 # Build from source
 go build -o har ./cmd/har/

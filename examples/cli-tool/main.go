@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/cyberspacesec/har-skills"
+	"github.com/waystreamer/har-skills/pkg/har"
 )
 
 const (

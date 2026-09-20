@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cyberspacesec/har-skills"
+	"github.com/waystreamer/har-skills/pkg/har"
 )
 
 func main() {

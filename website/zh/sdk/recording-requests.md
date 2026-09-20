@@ -134,7 +134,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 // capture 是上层测绘系统抓到的一组数据：req/resp 之外还有真实开始时间、耗时、对端 IP。
@@ -266,7 +266,7 @@ import (
     "sync"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -389,7 +389,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {
@@ -512,7 +512,7 @@ import (
     "os"
     "time"
 
-    har "github.com/cyberspacesec/har-skills"
+    har "github.com/waystreamer/har-skills"
 )
 
 func main() {

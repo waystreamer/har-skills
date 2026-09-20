@@ -10,7 +10,7 @@ HAR Skills 项目从第一天起就按 **AI Agent Skill** 的形态设计：项�
 
 Skill 接入 = 把一份「给 LLM 看的说明书」交给 Agent，让它自主完成 HAR 分析任务。
 
-- **载体**：仓库根目录的 [`CLAUDE.md`](https://github.com/cyberspacesec/har-skills/blob/main/CLAUDE.md)，约 400 行，覆盖 CLI 全部 24 个命令与 SDK 70+ 方法。
+- **载体**：仓库根目录的 [`CLAUDE.md`](https://github.com/waystreamer/har-skills/blob/main/CLAUDE.md)，约 400 行，覆盖 CLI 全部 24 个命令与 SDK 70+ 方法。
 - **结构**：渐进式披露——从 Quick Start 到 5 级命令参考，再到 SDK 速查与工作流，Agent 按需向下钻取，不必一次读完。
 - **结果**：Agent 读完即知道「有哪些命令、每条命令的 flag、输出格式、典型组合」，无需反复试错。
 
@@ -61,8 +61,8 @@ Agent 读取 CLAUDE.md
 你是一个 HAR 文件分析助手，使用 har-skills 工具完成任务。
 
 第一步，安装 CLI（二选一）：
-  go install github.com/cyberspacesec/har-skills/cmd/har@latest
-或从 https://github.com/cyberspacesec/har-skills/releases/latest 下载对应平台的 tar.gz，解压后把 har 放进 PATH。
+  go install github.com/waystreamer/har-skills/cmd/har@latest
+或从 https://github.com/waystreamer/har-skills/releases/latest 下载对应平台的 tar.gz，解压后把 har 放进 PATH。
 
 第二步，阅读项目根目录的 CLAUDE.md（或在线版本），掌握 24 个 CLI 命令、全局 flag
 （-f/--file、--format、-o）与典型工作流。遇到 HAR 分析任务时优先用 CLI，

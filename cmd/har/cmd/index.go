@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	har "github.com/cyberspacesec/har-skills"
-	"github.com/cyberspacesec/har-skills/cmd/har/internal"
+	har "github.com/waystreamer/har-skills/pkg/har"
+	"github.com/waystreamer/har-skills/cmd/har/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -101,14 +101,25 @@ Also shows index statistics.`,
 }
 
 func outputIndexResult(cmd *cobra.Command, entries []*har.Entries) error {
-	// Convert []*Entries to []Entries for FilterResult
-	entriesSlice := make([]har.Entries, len(entries))
-	for i, e := range entries {
-		entriesSlice[i] = *e
+	// Convert []*Entries to []Entries, preserving global indexes by matching
+	// against the full HAR. 索引包返回的是指向 h.Log.Entries 元素的指针，
+	// 用指针反查全局索引最直接。
+	h := internal.LoadHar(cmd, nil)
+	ei := &entryIndex{}
+	ptrToGlobal := make(map[*har.Entries]int)
+	for i := range h.Log.Entries {
+		ptrToGlobal[&h.Log.Entries[i]] = i
 	}
-	result := &har.FilterResult{Entries: entriesSlice}
-	return internal.WriteOutput(cmd, buildListJSON(result), func() string {
-		return formatFindTable(result)
+	for _, e := range entries {
+		ei.entries = append(ei.entries, *e)
+		if g, ok := ptrToGlobal[e]; ok {
+			ei.gidx = append(ei.gidx, g)
+		} else {
+			ei.gidx = append(ei.gidx, -1)
+		}
+	}
+	return internal.WriteOutput(cmd, buildListJSON(ei), func() string {
+		return formatFindTable(ei, 0)
 	}, nil)
 }
 

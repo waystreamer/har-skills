@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/cyberspacesec/har-skills"
+	"github.com/waystreamer/har-skills/pkg/har"
 )
 
 // 演示使用新的函数选项模式API

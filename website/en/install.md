@@ -14,12 +14,12 @@ Simplest path: download the archive for your platform from GitHub Releases, extr
 ::: code-group
 
 ```bash [Linux x86_64]
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_linux_x86_64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 ```
 
 ```bash [macOS Apple Silicon]
-curl -sL https://github.com/cyberspacesec/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
+curl -sL https://github.com/waystreamer/har-skills/releases/latest/download/har-skills_0.1.0_darwin_arm64.tar.gz | tar xz
 sudo mv har /usr/local/bin/
 ```
 
@@ -49,14 +49,14 @@ Pre-built binaries cover these platforms:
 | windows | x86_64 / i386 |
 | freebsd | x86_64 / i386 |
 
-Download filenames follow `har-skills_<version>_<os>_<arch>.tar.gz` (`.zip` for Windows). Pick yours on the [Releases page](https://github.com/cyberspacesec/har-skills/releases/latest).
+Download filenames follow `har-skills_<version>_<os>_<arch>.tar.gz` (`.zip` for Windows). Pick yours on the [Releases page](https://github.com/waystreamer/har-skills/releases/latest).
 
 ## Method 2: go install
 
 If you have Go 1.19+, one line does it:
 
 ```bash
-go install github.com/cyberspacesec/har-skills/cmd/har@latest
+go install github.com/waystreamer/har-skills/cmd/har@latest
 ```
 
 The binary lands in `$GOPATH/bin` (or `$GOBIN`) — make sure that's on your `PATH`:
@@ -76,7 +76,7 @@ For production, replace `@latest` with a concrete version (e.g. `@v0.1.0`) to av
 Useful when you need custom build tags, version injection, or cross-compilation.
 
 ```bash
-git clone https://github.com/cyberspacesec/har-skills.git
+git clone https://github.com/waystreamer/har-skills.git
 cd har-skills
 go build -o har ./cmd/har/
 ```
@@ -86,7 +86,7 @@ go build -o har ./cmd/har/
 Use `-ldflags` to stamp the git tag into the binary so `har --version` shows it:
 
 ```bash
-go build -ldflags "-X github.com/cyberspacesec/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
+go build -ldflags "-X github.com/waystreamer/har-skills/cmd/har/cmd.version=$(git describe --tags 2>/dev/null || echo dev)" -o har ./cmd/har/
 ```
 
 ### Cross-compilation
@@ -125,7 +125,7 @@ har -f testdata/example.har info
 | Install method | Upgrade command |
 | --- | --- |
 | Pre-built binary | Download the new archive and overwrite `har` |
-| go install | `go install github.com/cyberspacesec/har-skills/cmd/har@latest` |
+| go install | `go install github.com/waystreamer/har-skills/cmd/har@latest` |
 | Source build | `git pull && go build -o har ./cmd/har/` |
 
 ### Uninstall

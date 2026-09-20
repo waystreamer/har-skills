@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	har "github.com/cyberspacesec/har-skills"
-	"github.com/cyberspacesec/har-skills/cmd/har/internal"
+	har "github.com/waystreamer/har-skills/pkg/har"
+	"github.com/waystreamer/har-skills/cmd/har/internal"
 	"github.com/spf13/cobra"
 )
 
