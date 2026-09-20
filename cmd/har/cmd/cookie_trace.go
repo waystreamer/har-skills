@@ -36,7 +36,7 @@ var cookieTraceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(cookieTraceCmd)
 	cookieTraceCmd.Flags().Bool("show-value", true, "显示 Cookie 值（false 时只显示长度，用于脱敏）")
-	cookieTraceCmd.Flags().Int("url-max", 0, "URL 显示截断长度（0=不截断；终端阅读建议 60）")
+	cookieTraceCmd.Flags().Int("url-max", 80, "URL 显示截断长度（0=不截断）；默认 80，长 query 截到 path")
 }
 
 // cookieTraceEvent 生命周期中的一个事件
@@ -139,8 +139,9 @@ func runCookieTrace(cmd *cobra.Command, args []string) error {
 	}, nil)
 }
 
-// truncateURL 截断超长 URL 到指定长度 + 省略提示。
-// 注意按 rune 截断：HAR 里常有中文 URL，按字节切会产生非法 UTF-8。
+// truncateURL 截断超长 URL：优先截到 path 末尾（丢掉 query），仍超长再硬截。
+// App 抓包 URL 的 query 动辄上千字符，定位接口时 path 才是关键。
+// 按 rune 截断：HAR 里常有中文 URL，按字节切会产生非法 UTF-8。
 func truncateURL(u string, maxLen int) string {
 	if maxLen <= 0 {
 		return u
@@ -149,6 +150,20 @@ func truncateURL(u string, maxLen int) string {
 	if len(runes) <= maxLen {
 		return u
 	}
+
+	// 尝试截到 ? 或 # 之前（保留 origin+path）
+	cut := -1
+	for i, r := range runes {
+		if r == '?' || r == '#' {
+			cut = i
+			break
+		}
+	}
+	if cut > 0 && cut <= maxLen {
+		return fmt.Sprintf("%s...[query +%d chars]", string(runes[:cut]), len(runes)-cut)
+	}
+
+	// path 本身就超长，硬截
 	if maxLen < 10 {
 		maxLen = 10
 	}

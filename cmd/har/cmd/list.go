@@ -92,7 +92,7 @@ func init() {
 	listCmd.Flags().String("method", "", "按HTTP方法过滤")
 	listCmd.Flags().Int("status", 0, "按状态码过滤")
 	listCmd.Flags().String("domain", "", "按域名过滤")
-	listCmd.Flags().Int("url-max", 0, "URL 显示截断长度（0=不截断；App 抓包建议 60）")
+	listCmd.Flags().Int("url-max", 80, "URL 显示截断长度（0=不截断）；默认 80，App 抓包长 query 截到 path")
 }
 
 // sortPairStable 按条目键值对 entryIndex 做稳定排序，entries 与 gidx 同步移动

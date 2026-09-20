@@ -53,8 +53,7 @@ type sanitizeStats struct {
 }
 
 func newSanitizeStats() *sanitizeStats { return &sanitizeStats{counters: map[string]int{}} }
-func (s *sanitizeStats) add(k string)  { s.counters[k]++ }
-func (s *sanitizeStats) count(k string) int { return s.counters[k] }
+func (s *sanitizeStats) add(k string) { s.counters[k]++ }
 
 func runSanitize(cmd *cobra.Command, args []string) error {
 	fixTime, _ := cmd.Flags().GetBool("fix-time")

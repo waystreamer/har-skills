@@ -264,7 +264,7 @@ func init() {
 	findCmd.Flags().Bool("cache-hits", false, "Find requests with cache hits")
 	// Output
 	findCmd.Flags().IntP("limit", "n", 0, "Limit output to N entries (0=all)")
-	findCmd.Flags().Int("url-max", 0, "Truncate URL display to N chars (0=no truncation; use 60 for App captures)")
+	findCmd.Flags().Int("url-max", 80, "Truncate URL display to N chars (0=no truncation); default 80 cuts to path for long App URLs")
 }
 
 // formatFindTable 格式化搜索结果为tabwriter表格
@@ -279,7 +279,7 @@ func formatFindTable(ei *entryIndex, urlMax int) string {
 		size := internal.FormatBytes(entry.Response.Content.Size)
 		dur := internal.FormatDuration(entry.Time)
 		fmt.Fprintf(w, "%d\t%s\t%d\t%s\t%s\t%s\n",
-			ei.gidx[i], entry.Request.Method, entry.Response.Status, size, dur, entry.Request.URL)
+			ei.gidx[i], entry.Request.Method, entry.Response.Status, size, dur, truncateURL(entry.Request.URL, urlMax))
 	}
 	w.Flush()
 
