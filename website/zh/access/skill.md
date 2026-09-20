@@ -52,6 +52,7 @@ Agent 读取 CLAUDE.md
 | 安全与脱敏 | `security` `redact` `cookie` | 安全评分、findings、脱敏后的新 HAR |
 | 性能与缓存 | `performance` `timing` `cache` `waterfall` | 评分等级、关键路径、可缓存性 |
 | 转换与导出 | `transform` `export` `dedup` `replay` | curl/wget/Postman、去重文件、回放结果 |
+| 逆向分析（本 fork 新增） | `endpoints` `value-trace` `cookie-trace` `diff-entry` `sanitize` | 端点指纹、值溯源、字段级 diff、清洗后的 HAR |
 
 ## 一键引导提示词（One-Prompt Agent Bootstrap）
 
@@ -64,7 +65,7 @@ Agent 读取 CLAUDE.md
   go install github.com/waystreamer/har-skills/cmd/har@latest
 或从 https://github.com/waystreamer/har-skills/releases/latest 下载对应平台的 tar.gz，解压后把 har 放进 PATH。
 
-第二步，阅读项目根目录的 CLAUDE.md（或在线版本），掌握 24 个 CLI 命令、全局 flag
+第二步，阅读项目根目录的 CLAUDE.md（或在线版本），掌握 29 个 CLI 命令、全局 flag
 （-f/--file、--format、-o）与典型工作流。遇到 HAR 分析任务时优先用 CLI，
 并通过 --format json 拿到机器可读结果。
 
@@ -73,6 +74,8 @@ Agent 读取 CLAUDE.md
   har -f <file> find --errors --format json # 抓错误
   har -f <file> security --format json      # 安全审计
   har -f <file> performance --format json   # 性能打分
+  har -f <file> endpoints --format json     # 端点指纹（逆向场景）
+  har -f <file> value-trace "token"         # 任意值溯源（逆向场景）
 
 约定：
 - 需要分享结果前先脱敏：har -f <file> redact --redact-ips -o redacted.har
@@ -93,7 +96,7 @@ Agent 读取 CLAUDE.md
 | CLI 输出 `--format json` | 机器可读，Agent 可直接解析并纳入推理 |
 | 命令组合表达力强 | `find --slow 1000` → `extract` → `export curl` 一条管道完成多步 |
 | Skill 文档本身面向 LLM | 一次加载即获得完整能力地图，省 token、省往返 |
-| 24 命令覆盖全生命周期 | 解析、过滤、安全、性能、转换、导出、回放，闭环 |
+| 29 命令覆盖全生命周期 | 解析、过滤、安全、性能、转换、导出、回放、逆向分析，闭环 |
 | 零运行时依赖（SDK 侧） | 二进制单文件，部署无摩擦 |
 
 ## 适合的任务
@@ -102,6 +105,7 @@ Agent 读取 CLAUDE.md
 - **性能分析**：`performance` 打分 → `find --slow` 找慢请求 → `waterfall --critical-path` 看关键路径，适合「为什么这页慢」类需求。
 - **API 行为对比**：`diff a.har b.har --include-body` 对比两份抓包，适合回归测试与接口迁移。
 - **数据脱敏后分享**：`dedup --remove` 去重 → `redact --redact-ips` 脱敏 → `split --by domain` 拆分，适合把抓包安全地交给第三方。
+- **逆向分析（本 fork 新增）**：`endpoints` 归一化端点 → `value-trace "token"` 溯源任意值 → `diff-entry --index-a N --index-b M` 字段级对比两次调用，适合「这个 sign/token 是谁发的、哪次调用不一样」类需求。
 
 ## Skill 文档 vs 传统 README
 

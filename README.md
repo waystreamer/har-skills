@@ -164,6 +164,11 @@ har -f capture.har replay                            # Replay HTTP requests
 | `dedup` | Detect and remove duplicate or near-duplicate requests |
 | `index` | Build an in-memory index for fast lookup |
 | `export` | Export to curl, wget, Python, Postman, CSV, Markdown, HTML, JSON, JSONL, YAML, XML |
+| `endpoints` | Endpoint fingerprint: cluster requests by method+host+path template, normalize dynamic path segments to `{param}` |
+| `value-trace` | Trace any value across all fields (URL, query, headers, cookies, POST params, bodies) with URL-encode/base64/hex variant matching |
+| `diff-entry` | Field-level diff of two individual entries (same API called twice, working vs broken) |
+| `cookie-trace` | Cookie provenance: which response set it, which requests carry it, when the value changed |
+| `sanitize` | Fix third-party HAR exports (Reqable/Charles/Fiddler) for strict validators |
 
 ## Go SDK
 
@@ -294,6 +299,7 @@ Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 - **性能分析**：TTFB、总加载耗时、请求数量、传输体积、缓存、压缩和优化建议。
 - **操作与修复**：验证、转换 URL/Header/Scheme、重放请求、提取响应体、去重、索引。
 - **协作与导出**：diff、merge、split，导出 curl、wget、Python、Postman、CSV、Markdown、HTML、JSON、JSONL、YAML、XML。
+- **逆向分析（本 fork 新增）**：端点指纹归一化、任意值溯源（value-trace）、Cookie 溯源、字段级请求对比（diff-entry）、第三方导出清洗（sanitize）。
 
 ### 常用命令
 
@@ -308,6 +314,11 @@ har -f capture.har export curl                 # 导出复现命令
 har diff before.har after.har                  # 对比两个 HAR
 har merge a.har b.har -o merged.har            # 合并 HAR
 har -f capture.har validate                    # 规范校验
+har -f capture.har endpoints                   # 端点指纹归一化
+har -f capture.har value-trace "token123"      # 任意值溯源
+har -f capture.har cookie-trace BDUSS          # Cookie 溯源
+har -f capture.har diff-entry --index-a 0 --index-b 5  # 字段级对比两条请求
+har sanitize raw.har -o clean.har              # 清洗第三方导出
 ```
 
 ### Go SDK 示例

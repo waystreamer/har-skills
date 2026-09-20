@@ -52,6 +52,7 @@ Each step is autonomous: reading the doc is context loading, install is one shel
 | Security & redact | `security` `redact` `cookie` | security score, findings, a redacted new HAR |
 | Performance & cache | `performance` `timing` `cache` `waterfall` | grade, critical path, cacheability |
 | Transform & export | `transform` `export` `dedup` `replay` | curl/wget/Postman, deduped file, replay results |
+| Reverse engineering (this fork) | `endpoints` `value-trace` `cookie-trace` `diff-entry` `sanitize` | endpoint fingerprints, value provenance, field-level diff, cleaned HAR |
 
 ## One-Prompt Agent Bootstrap
 
@@ -66,7 +67,7 @@ or download the tar.gz for your platform from
   https://github.com/waystreamer/har-skills/releases/latest
 extract it and put `har` on your PATH.
 
-Step 2 — read CLAUDE.md at the repo root (or online) to learn the 24 CLI
+Step 2 — read CLAUDE.md at the repo root (or online) to learn the 29 CLI
 commands, global flags (-f/--file, --format, -o) and typical workflows.
 Prefer the CLI for HAR tasks and use --format json for machine-readable output.
 
@@ -75,6 +76,8 @@ Step 3 — analyze the user's HAR file:
   har -f <file> find --errors --format json # surface errors
   har -f <file> security --format json      # security audit
   har -f <file> performance --format json   # performance score
+  har -f <file> endpoints --format json     # endpoint fingerprints (reverse engineering)
+  har -f <file> value-trace "token"         # trace any value (reverse engineering)
 
 Conventions:
 - Redact before sharing: har -f <file> redact --redact-ips -o redacted.har
@@ -95,7 +98,7 @@ If your Agent already works inside the repo, just point it at the local `CLAUDE.
 | CLI emits `--format json` | Machine-readable; Agent parses and reasons over it directly |
 | Composable commands | `find --slow 1000` → `extract` → `export curl` is one pipeline |
 | Skill doc is LLM-first | One load yields the full capability map — fewer tokens, fewer round-trips |
-| 24 commands span the lifecycle | Parse, filter, security, performance, transform, export, replay — closed loop |
+| 29 commands span the lifecycle | Parse, filter, security, performance, transform, export, replay, reverse engineering — closed loop |
 | Zero runtime deps (SDK side) | Single binary, frictionless deploy |
 
 ## Suitable tasks
@@ -104,6 +107,7 @@ If your Agent already works inside the repo, just point it at the local `CLAUDE.
 - **Performance analysis**: `performance` scores → `find --slow` isolates slow requests → `waterfall --critical-path` shows the critical path. Fits "why is this page slow" requests.
 - **API behavior diff**: `diff a.har b.har --include-body` compares two captures — useful for regression tests and API migration.
 - **Redact-then-share**: `dedup --remove` → `redact --redact-ips` → `split --by domain`. Safely hand captures to a third party.
+- **Reverse engineering (this fork)**: `endpoints` normalizes endpoints → `value-trace "token"` traces any value across all fields → `diff-entry --index-a N --index-b M` field-level diff of two calls. Fits "where does this sign/token come from, and what differs between the working and broken call" requests.
 
 ## Skill doc vs a traditional README
 
