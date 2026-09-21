@@ -42,6 +42,7 @@ func init() {
 	endpointsCmd.Flags().String("host", "", "只看指定 host 的端点")
 	endpointsCmd.Flags().Int("limit", 0, "最多显示多少个端点（0=全部）")
 	endpointsCmd.Flags().Int("url-max", 60, "样本 URL 显示截断长度（0=不截断）")
+	endpointsCmd.Flags().Bool("tree", false, "按 host + 路径前缀树状分组显示（大 HAR 概览用）")
 }
 
 type endpointsReport struct {
@@ -56,6 +57,7 @@ func runEndpoints(cmd *cobra.Command, args []string) error {
 	hostFilter, _ := cmd.Flags().GetString("host")
 	limit, _ := cmd.Flags().GetInt("limit")
 	urlMax, _ := cmd.Flags().GetInt("url-max")
+	tree, _ := cmd.Flags().GetBool("tree")
 
 	eps := h.BuildEndpoints()
 
@@ -100,8 +102,116 @@ func runEndpoints(cmd *cobra.Command, args []string) error {
 	}
 
 	return internal.WriteOutput(cmd, report, func() string {
+		if tree {
+			return formatEndpointsTree(report)
+		}
 		return formatEndpointsText(report, urlMax)
 	}, nil)
+}
+
+// formatEndpointsTree 按 host + 路径前缀树状分组显示端点
+func formatEndpointsTree(r *endpointsReport) string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("端点指纹: %d 条请求 → %d 个端点\n", r.TotalEntries, r.TotalEndpoints))
+	sb.WriteString(strings.Repeat("=", 78) + "\n")
+
+	if len(r.Endpoints) == 0 {
+		sb.WriteString("无匹配端点。\n")
+		return sb.String()
+	}
+
+	// 按 host 分组，host 内按路径前缀分组
+	type pathGroup struct {
+		prefix string
+		eps    []*har.Endpoint
+	}
+	type hostGroup struct {
+		host   string
+		total  int
+		groups []pathGroup
+	}
+
+	hostMap := make(map[string]*hostGroup)
+	var hostOrder []string
+
+	for _, ep := range r.Endpoints {
+		hg, ok := hostMap[ep.Host]
+		if !ok {
+			hg = &hostGroup{host: ep.Host}
+			hostMap[ep.Host] = hg
+			hostOrder = append(hostOrder, ep.Host)
+		}
+		hg.total += ep.Count
+
+		// 取路径前两级作为前缀分组 key（如 /act/api/、/rest/2.0/membership/）
+		prefix := pathPrefix(ep.PathTemplate, 2)
+		found := false
+		for i := range hg.groups {
+			if hg.groups[i].prefix == prefix {
+				hg.groups[i].eps = append(hg.groups[i].eps, ep)
+				found = true
+				break
+			}
+		}
+		if !found {
+			hg.groups = append(hg.groups, pathGroup{prefix: prefix, eps: []*har.Endpoint{ep}})
+		}
+	}
+
+	// host 按总请求数降序
+	sort.SliceStable(hostOrder, func(i, j int) bool {
+		return hostMap[hostOrder[i]].total > hostMap[hostOrder[j]].total
+	})
+
+	for _, host := range hostOrder {
+		hg := hostMap[host]
+		sb.WriteString(fmt.Sprintf("\n%s (%d requests, %d endpoints)\n", hg.host, hg.total, len(hg.groups)))
+
+		// 路径前缀组按总请求数降序
+		sort.SliceStable(hg.groups, func(i, j int) bool {
+			ti, tj := 0, 0
+			for _, ep := range hg.groups[i].eps {
+				ti += ep.Count
+			}
+			for _, ep := range hg.groups[j].eps {
+				tj += ep.Count
+			}
+			return ti > tj
+		})
+
+		for _, g := range hg.groups {
+			// 组内按 count 降序
+			sort.SliceStable(g.eps, func(i, j int) bool {
+				return g.eps[i].Count > g.eps[j].Count
+			})
+			sb.WriteString(fmt.Sprintf("  %s\n", g.prefix))
+			for _, ep := range g.eps {
+				// 只显示路径模板相对于前缀的部分
+				leaf := strings.TrimPrefix(ep.PathTemplate, strings.TrimSuffix(g.prefix, "/"))
+				if leaf == "" || leaf == ep.PathTemplate {
+					leaf = ep.PathTemplate
+				}
+				sb.WriteString(fmt.Sprintf("    %-6s %-50s ×%d  status:%v\n",
+					ep.Method, leaf, ep.Count, ep.StatusCodes))
+			}
+		}
+	}
+
+	sb.WriteString("\n提示: 用 `endpoints`（无 --tree）查看完整详情，含全局索引和样本 URL。\n")
+	return sb.String()
+}
+
+// pathPrefix 取路径的前 n 段作为分组前缀
+func pathPrefix(path string, n int) string {
+	segs := strings.Split(strings.Trim(path, "/"), "/")
+	if len(segs) == 0 || segs[0] == "" {
+		return "/"
+	}
+	if len(segs) <= n {
+		return "/" + strings.Join(segs, "/") + "/"
+	}
+	return "/" + strings.Join(segs[:n], "/") + "/"
 }
 
 func formatEndpointsText(r *endpointsReport, urlMax int) string {

@@ -20,14 +20,20 @@ var diffEntryCmd = &cobra.Command{
 要逐项看清 query/cookie/header 哪里不一样。整体 diff 命令做不了这个（它按
 URL/索引匹配两个文件，只比 header 名和响应体，给不出同一接口两实例的逐项 diff）。
 
-条目选择（两选一，可混用）：
+条目选择（三种方式，可混用）：
   --index-a/--index-b   全局索引（list/find 输出的 INDEX 列）
   --url-a/--url-b       URL 子串，取第一个匹配
-省略 file2 时在同一个 HAR 内对比（--index-a 与 --index-b 必须都给）。
+  --endpoint            端点指纹（endpoints 命令输出的 Fingerprint），自动选样本
+                        配合 --status-a/--status-b 按状态码选样本
+
+省略 file2 时在同一个 HAR 内对比。
 
 示例:
-  # 同一 HAR 内对比第 42 条和第 87 条（同接口两次调用）
+  # 同一 HAR 内对比第 42 条和第 87 条
   har -f app.har diff-entry --index-a 42 --index-b 87
+
+  # 自动配对：同一端点下 200 vs 400 的样本
+  har -f app.har diff-entry --endpoint "GET pan.baidu.com /rest/2.0/membership/user" --status-a 200 --status-b 400
 
   # 跨文件：a.har 里的 /sign 与 b.har 里的 /sign
   har diff-entry a.har b.har --url-a "/sign" --url-b "/sign"
@@ -45,6 +51,9 @@ func init() {
 	diffEntryCmd.Flags().Int("index-b", -1, "第二个条目的全局索引")
 	diffEntryCmd.Flags().String("url-a", "", "第一个条目的 URL 子串（取第一个匹配）")
 	diffEntryCmd.Flags().String("url-b", "", "第二个条目的 URL 子串（取第一个匹配）")
+	diffEntryCmd.Flags().String("endpoint", "", "端点指纹（如 \"GET pan.baidu.com /rest/2.0/membership/user\"），自动选样本")
+	diffEntryCmd.Flags().Int("status-a", -1, "条目 A 的状态码（配合 --endpoint 使用）")
+	diffEntryCmd.Flags().Int("status-b", -1, "条目 B 的状态码（配合 --endpoint 使用）")
 	diffEntryCmd.Flags().Bool("skip-body", false, "跳过响应体内容对比（大响应时建议开启）")
 	diffEntryCmd.Flags().StringSlice("ignore-headers", nil, "对比时忽略的请求/响应头名（逗号分隔）")
 	diffEntryCmd.Flags().StringSlice("ignore-cookies", nil, "对比时忽略的 Cookie 名（逗号分隔）")
@@ -56,6 +65,9 @@ func runDiffEntry(cmd *cobra.Command, args []string) error {
 	indexB, _ := cmd.Flags().GetInt("index-b")
 	urlA, _ := cmd.Flags().GetString("url-a")
 	urlB, _ := cmd.Flags().GetString("url-b")
+	endpoint, _ := cmd.Flags().GetString("endpoint")
+	statusA, _ := cmd.Flags().GetInt("status-a")
+	statusB, _ := cmd.Flags().GetInt("status-b")
 	skipBody, _ := cmd.Flags().GetBool("skip-body")
 	ignoreHeaders, _ := cmd.Flags().GetStringSlice("ignore-headers")
 	ignoreCookies, _ := cmd.Flags().GetStringSlice("ignore-cookies")
@@ -78,6 +90,15 @@ func runDiffEntry(cmd *cobra.Command, args []string) error {
 		h2 = h1
 	}
 
+	// --endpoint 模式：自动按端点指纹 + 状态码选样本
+	if endpoint != "" {
+		var err error
+		indexA, indexB, err = pickByEndpoint(h1, endpoint, statusA, statusB)
+		if err != nil {
+			return err
+		}
+	}
+
 	e1, g1, err := pickEntry(h1, indexA, urlA, "A")
 	if err != nil {
 		return err
@@ -97,6 +118,44 @@ func runDiffEntry(cmd *cobra.Command, args []string) error {
 	return internal.WriteOutput(cmd, report, func() string {
 		return formatEntryDiffText(report)
 	}, nil)
+}
+
+// pickByEndpoint 按端点指纹 + 状态码自动选出两个样本的全局索引
+//
+// endpoint 格式："GET pan.baidu.com /rest/2.0/membership/user"（与 endpoints 命令
+// 输出的 Fingerprint 字段一致）。status-a/status-b 各取该端点下第一个匹配状态码的样本；
+// 缺省 -1 时取该端点的第一个样本。
+func pickByEndpoint(h *har.Har, fingerprint string, statusA, statusB int) (int, int, error) {
+	ep := h.FindEndpointByFingerprint(fingerprint)
+	if ep == nil {
+		return -1, -1, fmt.Errorf("未找到端点 %q，请先跑 `endpoints` 命令确认指纹", fingerprint)
+	}
+
+	findByStatus := func(status int) int {
+		if status < 0 {
+			return ep.EntryIndices[0] // 缺省取第一个样本
+		}
+		for _, idx := range ep.EntryIndices {
+			if h.Log.Entries[idx].Response.Status == status {
+				return idx
+			}
+		}
+		return -1
+	}
+
+	a := findByStatus(statusA)
+	b := findByStatus(statusB)
+
+	if a < 0 {
+		return -1, -1, fmt.Errorf("端点 %q 下没有状态码 %d 的样本（见过的状态码: %v）", fingerprint, statusA, ep.StatusCodes)
+	}
+	if b < 0 {
+		return -1, -1, fmt.Errorf("端点 %q 下没有状态码 %d 的样本（见过的状态码: %v）", fingerprint, statusB, ep.StatusCodes)
+	}
+	if a == b && statusA == statusB {
+		return -1, -1, fmt.Errorf("端点 %q 下状态码 %d 只有一个样本（idx=%d），请用 --status-a/--status-b 指定不同状态码，或改用 --index-a/--index-b", fingerprint, statusA, a)
+	}
+	return a, b, nil
 }
 
 // pickEntry 按全局索引或 URL 子串选出一个条目，返回条目与全局索引

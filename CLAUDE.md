@@ -215,10 +215,11 @@ This is the foundation for all higher-level analysis: schema aggregation, multi-
 har -f capture.har endpoints                          # All endpoints
 har -f capture.har endpoints --sort count             # Sort by sample count (default)
 har -f capture.har endpoints --host api.example.com   # Filter by host
+har -f capture.har endpoints --tree                   # Tree view grouped by host + path prefix
 har -f capture.har endpoints --format json            # JSON with full entry indices
 ```
 
-**Flags**: `--sort` (count/host/path), `--host`, `--limit`, `--url-max`
+**Flags**: `--sort` (count/host/path), `--host`, `--limit`, `--url-max`, `--tree`
 
 Output: endpoint fingerprint, sample count, status codes, query keys, param segment positions, representative URL, and global entry indices (usable with `extract --index` / `diff-entry --index-a`).
 
@@ -254,6 +255,9 @@ Field-by-field diff of two individual entries — the common reverse-engineering
 # Same HAR: entry 42 vs entry 87 (use global INDEX from find/list)
 har -f app.har diff-entry --index-a 42 --index-b 87
 
+# Auto-pair by endpoint fingerprint + status codes (no manual index lookup)
+har -f app.har diff-entry --endpoint "POST pan.baidu.com /feed/cardinfos" --status-a 200 --status-b 400
+
 # Cross-file: /sign in a.har vs /sign in b.har
 har diff-entry a.har b.har --url-a "/sign" --url-b "/sign"
 
@@ -264,7 +268,7 @@ har -f app.har diff-entry --index-a 42 --index-b 87 --skip-body
 har -f app.har diff-entry --index-a 42 --index-b 87 --ignore-query t,timestamp --ignore-cookies PANPSC
 ```
 
-**Flags**: `--index-a` `--index-b` (global index from `find`/`list`), `--url-a` `--url-b` (URL substring, first match), `--skip-body`, `--ignore-headers`, `--ignore-cookies`, `--ignore-query`
+**Flags**: `--index-a` `--index-b` (global index), `--url-a` `--url-b` (URL substring), `--endpoint` (fingerprint from `endpoints` command), `--status-a` `--status-b` (status code filter, -1 = first sample), `--skip-body`, `--ignore-headers`, `--ignore-cookies`, `--ignore-query`
 
 Output groups differences by `meta` / `query` / `request-header` / `cookie` / `post-param` / `response-header` / `response-cookie` / `response-body`, with `<absent>` marking a field present on only one side.
 
@@ -410,10 +414,12 @@ This answers the core reverse-engineering question: "where does this token / sig
 har -f capture.har value-trace "abc123def"                    # Basic trace
 har -f capture.har value-trace "token=xyz" --base64           # Include base64 variant
 har -f capture.har value-trace "sess-999" --no-body           # Skip body (faster on large HARs)
+har -f capture.har value-trace "sig" --from-response          # Only response side (find origin)
+har -f capture.har value-trace "sig" --first-only             # Only first occurrence (quick locate)
 har -f capture.har value-trace "sig" --format json            # JSON output
 ```
 
-**Flags**: `--no-body`, `--url-encode` (default true), `--base64`, `--hex`, `--url-max`, `--context`
+**Flags**: `--no-body`, `--url-encode` (default true), `--base64`, `--hex`, `--from-response`, `--first-only`, `--url-max`, `--context`
 
 Output: locations grouped by direction (request/response) and field type (url/query/header/cookie/post-param/body), with match type (exact/url-encoded/base64/hex) and context snippet. Entry indices are global.
 
